@@ -3,10 +3,10 @@ import bliss.saga as saga
 import traceback
 import pilot
 
-#REDIS_PWD = os.environ.get()
-#USER_NAME = os.environ.get()
+REDIS_PWD = os.environ.get('XSEDE_TUTORIAL_REDIS_PASSWORD')
+USER_NAME = os.environ.get('XSEDE_TUTORIAL_USER_NAME')
 
-COORD = "redis://localhost:6379"
+COORD = "redis://%s@gw68.quarry.iu.teragrid.org:6379" % REDIS_PWD
 
 HOSTNAME = "fork://localhost"
 
