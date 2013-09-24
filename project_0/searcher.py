@@ -1,0 +1,29 @@
+import sys
+if __name__ == "__main__":
+    args = sys.argv[1:]
+    data_string_1 = sys.argv[3:]
+    #print data_string_1
+    data_string_2 = ''.join(data_string_1)
+    #print data_string_2
+    num = int(sys.argv[1])
+    outfile = sys.argv[2]
+    data_string_3 = data_string_2[1:len(data_string_2)-1].split(',')
+    #print data_string_3
+    #print len(data_string_3)
+    i=0
+    data=[]
+    while(i<num):
+        data.append(int(data_string_3[i]))
+        i+=1
+    maxim = data[0]
+    i=1
+    while(i<num):
+        if(maxim<data[i]):
+            maxim = data[i]
+        i+=1
+    f1 = open ('/home/vivek/assign_1/'+outfile,'w')
+    f1.write(str(maxim))
+    f1.close()
+    
+    
+

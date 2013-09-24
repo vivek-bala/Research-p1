@@ -1,0 +1,86 @@
+import os,time,sys,random
+import traceback
+import saga
+import pilot
+
+#REDIS_PWD = os.environ.get()
+#USER_NAME = os.environ.get()
+
+COORD = "redis://localhost:6379"
+
+HOSTNAME = "fork://localhost"
+
+QUEUE = "normal"
+
+WORKDIR = os.getenv("HOME")+"/assign_1"
+
+NUMBER_JOBS = 4
+
+DATA_SIZE = 100
+
+if __name__ == "__main__":
+    #Data generation
+    data=[]
+    i=0
+    dirname = 'sftp://localhost/'
+    workdir = saga.filesystem.Directory(dirname, saga.filesystem.Create)
+    while (i<DATA_SIZE):
+        data.append(random.randint(0,DATA_SIZE))
+        i+=1
+
+    pilot_compute_service = pilot.PilotComputeService(COORD)
+    #describe pilot
+    pilot_description = pilot.PilotComputeDescription()
+    pilot_description.service_url = "%s" %HOSTNAME
+    #pilot_description.queue = QUEUE
+    pilot_description.number_of_processes = NUMBER_JOBS
+    #pilot_description.working_directory = workdir.get_url().path
+    pilot_description.walltime = 10
+    #create pilot
+    pilotjob = pilot_compute_service.create_pilot(pilot_description)
+
+    print 'Finished pilot job creation'
+    print 'Start CU submission'
+    #submit jobs
+    tasks = list()
+
+    DATA_SET_SIZE = DATA_SIZE/NUMBER_JOBS
+    for x in range(0,NUMBER_JOBS):
+        outputfile = 'file_%s.txt'%x
+        #describe each job
+        task_description = pilot.ComputeUnitDescription()
+        task_description.executable = "python"
+        task_description.arguments = [WORKDIR+'/searcher.py',str(DATA_SET_SIZE),outputfile,str(data[x*DATA_SET_SIZE:(x+1)*DATA_SET_SIZE])]
+        task_description.walltime = 10
+        #task_description.working_directory = workdir.get_url().path
+        task_description.number_of_processes = 1
+
+        task = pilotjob.submit_compute_unit(task_description)
+        tasks.append(task)
+
+    pilotjob.wait()
+
+    #File moving section
+    
+    #End
+
+    reduced_data=[]
+    for x in range(0,NUMBER_JOBS):
+        f1 = open('file_%s.txt'%x,'r')
+        k = f1.readlines()
+        reduced_data.append(int(k[0]))
+        print k
+        f1.close()
+
+    maxim = reduced_data[0]
+    i=1
+    while(i<NUMBER_JOBS):
+        if(maxim<reduced_data[i]):
+            maxim = reduced_data[i]
+        i+=1
+
+    print 'Greatest number in the given set is ',maxim
+
+    print 'Terminating pilot jobs'
+    pilotjob.cancel()
+    pilot_compute_service.cancel()
